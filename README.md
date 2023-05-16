@@ -11,7 +11,7 @@ The hardware used in this project includes:
 - Mobitec flipdot display
 
 <p align="center">
-  <img src="schematic.png" width="50%" height="50%">
+  <img src="schematic.png" width="33%" height="33%">
 </p>
 
 
