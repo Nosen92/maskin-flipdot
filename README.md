@@ -8,24 +8,38 @@ The hardware used in this project includes:
 
 - Raspberry Pi Zero W
 - MAX485 chip
-- Mobitec flipdot displays
+- Mobitec flipdot display
+
+![Alt text](schematic.png "Note that DE and RE are bridged")
+
+The pinout from the mobitec flipdot display is:
+
+- Red — +24V
+- Black — Ground
+- White — RS-485 D+ (A)
+- Green — RS-485 D- (B)
 
 ## Installation
 
 To use this project, you'll need to do the following:
 
 1. Clone the repository:
-```cd ~
-git clone https://github.com/Nosen92/maskin-flipdot
-cd maskin-flipdot
-```
+
+`cd ~`
+
+`git clone https://github.com/Nosen92/maskin-flipdot`
+
+`cd maskin-flipdot`
+
 2. Install the required dependencies:
+
 `pip install -r requirements.txt`
 
 
 ## Usage
 
 To use the project, run the following command:
+
 `python maskin_flipdot.py`
 
 This will start the program and begin controlling the flipdot displays.
