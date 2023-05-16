@@ -10,7 +10,10 @@ The hardware used in this project includes:
 - MAX485 chip
 - Mobitec flipdot display
 
-![Alt text](schematic.png "Note that DE and RE are bridged")
+<p align="center">
+  <img src="schematic.png" width="50%" height="50%">
+</p>
+
 
 The pinout from the mobitec flipdot display is:
 
