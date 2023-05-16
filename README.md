@@ -17,8 +17,8 @@ To use this project, you'll need to do the following:
 1. Clone the repository:
 ```cd ~
 git clone https://github.com/Nosen92/maskin-flipdot
-cd maskin-flipdot```
-
+cd maskin-flipdot
+```
 2. Install the required dependencies:
 `pip install -r requirements.txt`
 
