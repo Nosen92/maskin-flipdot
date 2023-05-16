@@ -1,0 +1,1 @@
+pyserial  # Library for using the Raspberry Pi GPIO RX and TX pins
