@@ -159,10 +159,10 @@ def upload(payload):
         ser.write(payload)
 
 
-def write(text, address):
+def write(text, image, address):
     payload = header(address)
 #    payload = encode(payload, text, 10)
-    payload = pixelWrite(payload, picToArray())
+    payload = pixelWrite(payload, picToArray(image))
     payload = checksum(payload)
     upload(payload)
 
@@ -170,17 +170,23 @@ def write(text, address):
 
 
 
-def picToArray():
-    img = Image.open('testa.png').convert('L')
+def picToArray(image):
+    img = Image.open(image).convert('L')
     newImg = img.resize((112,16))
     np_img = np.array(newImg)
     np_img = ~np_img  # invert B&W
     np_img[np_img > 0] = 1
+    img.close()
     return np_img
 
 def main():
-    write(text, address)
-    sleep(1)
+    while 1:
+        write(text, 'test.png', address)
+        sleep(3)
+        write(text, 'test2.png', address)
+        sleep(3)
+        write(text, 'test3.png', address)
+        sleep(3)
 
 
 
