@@ -1,12 +1,15 @@
 import serial
 from time import sleep
 
+from PIL import Image
+import numpy as np
+
 width = 112
 height = 16
 address = 0x06 # can also be 0x06 and 0x07
 #text = "15   Engineers"
 #text = "Det heter byggmacka"
-text = "Hej Ellen"
+text = "Hej Elias"
 
 def header(address):
     header = bytearray()
@@ -26,7 +29,7 @@ def header(address):
 def encode(payload, text_str, horizontal_offset=0, vertical_offset=0, font=0x66):
     # Horizontal offset:
     payload.append(0xd2)
-    payload.append(0x0a)
+    payload.append(0x00)
 
     # Vertical offset: offset to bottom of text
     payload.append(0xd3)
@@ -34,7 +37,29 @@ def encode(payload, text_str, horizontal_offset=0, vertical_offset=0, font=0x66)
 
     # Font
     payload.append(0xd4)
-    payload.append(0x64)
+    payload.append(0x77)
+
+
+
+    for i in range(112):
+        payload.append(32 + 0b00010)
+
+    payload.append(0xd2)
+    payload.append(0x00)
+
+    payload.append(0xd3)
+    payload.append(0x09)
+       # Font
+    payload.append(0xd4)
+    payload.append(0x77)
+
+    for i in range(112):
+        payload.append(32 + 31)
+
+
+    # for i in range(16):
+    #     payload.extend(i)
+
 
     """ Different fonts:
     text_5px = 0x72  # Large letters only
@@ -56,10 +81,59 @@ def encode(payload, text_str, horizontal_offset=0, vertical_offset=0, font=0x66)
     symbols = 0x67
     bitwise = 0x77
 """
-
-    payload.extend(text_str.encode('utf-8'))
+    #payload.extend(text_str.encode('utf-8'))
     return payload
 
+
+def addBits(bits):
+    ret = 32
+    for i in range(len(bits)):
+        ret += bits[i]*2**i
+    return ret
+
+
+def pixelWrite(payload, bitmap):
+    # Iterate over every pixel of the sign.
+    for i in range(1, height//5 +1):
+        # Iterate over all 5px bands in the sign
+        payload.append(0xd2)
+        payload.append(0x00)
+
+        payload.append(0xd3)
+        payload.append(i*5-1)
+
+        payload.append(0xd4)
+        payload.append(0x77)
+
+
+        for j in range(width):
+            subcollumn = []
+            for k in range((i-1)*5,i*5):
+                subcollumn.append(bitmap[k][j])
+            
+            payload.append(addBits(subcollumn))
+
+    if height%5 != 0:
+        payload.append(0xd2)
+        payload.append(0x00)
+
+        payload.append(0xd3)
+        payload.append(height - height%5 + 5-1)
+
+        payload.append(0xd4)
+        payload.append(0x77)
+    
+        for j in range(width):
+
+            subcollumn = []
+            for k in range(height - height%5, height):
+                subcollumn.append(bitmap[k][j])
+            
+            payload.append(addBits(subcollumn))
+
+    return payload
+
+    
 
 def checksum(payload):
     check_sum = 0
@@ -87,14 +161,28 @@ def upload(payload):
 
 def write(text, address):
     payload = header(address)
-    payload = encode(payload, text, 10)
+#    payload = encode(payload, text, 10)
+    payload = pixelWrite(payload, picToArray())
     payload = checksum(payload)
     upload(payload)
 
 
+
+
+
+def picToArray():
+    img = Image.open('testa.png').convert('L')
+    newImg = img.resize((112,16))
+    np_img = np.array(newImg)
+    np_img = ~np_img  # invert B&W
+    np_img[np_img > 0] = 1
+    return np_img
+
 def main():
-        write(text, address)
-        sleep(1)
+    write(text, address)
+    sleep(1)
+
 
 
 main()
+
