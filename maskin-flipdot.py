@@ -1,17 +1,18 @@
 import serial
+from time import sleep
 
 width = 112
 height = 16
 address = 0x06 # can also be 0x06 and 0x07
 #text = "15   Engineers"
 #text = "Det heter byggmacka"
-text = "Engineers   15"
+text = "Hej Ellen"
 
 def header(address):
     header = bytearray()
     header.append(0xff)  # Header
     header.append(0x06)  # Address
-    header.append(0xa2)  # Text node
+    header.append(0xa2)  # Text mode
     # Display width
     header.append(0xd0)
     header.append(width)
@@ -27,18 +28,18 @@ def encode(payload, text_str, horizontal_offset=0, vertical_offset=0, font=0x66)
     payload.append(0xd2)
     payload.append(0x0a)
 
-    # Vertical offset:
+    # Vertical offset: offset to bottom of text
     payload.append(0xd3)
     payload.append(vertical_offset)
 
     # Font
     payload.append(0xd4)
-    payload.append(0x65)
+    payload.append(0x64)
 
     """ Different fonts:
     text_5px = 0x72  # Large letters only
-    text_6px = 0x66
-    text_7px = 0x65
+    text_7px = 0x66
+    text_13px = 0x65
     text_7px_bold = 0x64
     text_9px = 0x75
     text_9px_bold = 0x70
@@ -80,7 +81,7 @@ def checksum(payload):
 
 
 def upload(payload):
-    with serial.Serial('/dev/ttyS0', 4800, timeout=1) as ser:
+    with serial.Serial('COM4', 4800, timeout=1) as ser:
         ser.write(payload)
 
 
