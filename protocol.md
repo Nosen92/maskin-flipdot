@@ -3,30 +3,30 @@
 To control the flipdot display, commands are sent using Mobitec's sign protocol. This protocol consists of a sequence of words i.e. two hex values.
 Here is an example that simply writes EXAMPLE at the top left of the display:
 ```
-0xff  # Starting word
-0x06  # Sign address
-0xa2  # Always a2
-0xd0  # Display width
-0x70  # 112px
-0xd1  # Display height
-0x10  # 16px
-0xd2  # Horizontal offset
-0x00  # 0px
-0xd3  # Vertical offset
-0x0d  # 13px
-0xd4  # Font
-0x73  # 13px font
-0x45  # E
-0x58  # X
-0x41  # A
-0x4d  # M
-0x50  # P
-0x4c  # L
-0x45  # E
-0xcd  # Checksum
-0xff  # Stop word
+0xff  # Starting word      ⎫
+0x06  # Sign address       ⎟
+0xa2  # Always a2          ⎟
+0xd0  # Display width      ⎬ Header
+0x70  # 112px              ⎟
+0xd1  # Display height     ⎟
+0x10  # 16px               ⎭
+0xd2  # Horizontal offset  ⎫
+0x00  # 0px                ⎟
+0xd3  # Vertical offset    ⎟
+0x0d  # 13px               ⎟
+0xd4  # Font               ⎟
+0x73  # 13px font          ⎟
+0x45  # E                  ⎬ Data
+0x58  # X                  ⎟
+0x41  # A                  ⎟
+0x4d  # M                  ⎟
+0x50  # P                  ⎟
+0x4c  # L                  ⎟
+0x45  # E                  ⎭
+0xcd  # Checksum           ⎫ Footer
+0xff  # Stop word          ⎭
 ```
-Each message follows a standard format: **header**, **data**, and **footer**. Let's break it down.
+Each message can be divided into these parts: **header**, **data**, and **footer**. Let's break it down.
 
 ## Header
 ```
@@ -43,8 +43,8 @@ This part only needs to be sent once per message.
 
 ## Data
 The data contains information about what to draw and where. 
-> One message may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be repeated, even if they are identical to a previous section. If any one parameter is omitted, the sign **disregards** that section of data.
 
+### Horizontal and vertical offset
 ```
 0xd2  # Text cursor horizontal offset label
 0x00  # Horizontal offset = 0
@@ -54,6 +54,8 @@ The data contains information about what to draw and where.
 The sign features an offset capability that allows both rightward and downward shifting of the text. However, the vertical offset works in a weird way. The sign starts writing each character from its bottom-left corner. For example, applying a 13px vertical offset to a 5px font will create a 8px gap between the top of the 5px high character and the top of the display.
 
 Furthermore, it's important to note that the sign **disregards** any vertical offsets that would cause a character to exceed the top boundary of the display. This means that to move a 7px character 2px downwards, a 9px offset must be applied. If the offset is set to 2px, the text will appear at the top of the screen. On the other hand, the sign appropriately crops any text that exceeds the display boundaries downward or to the right, as expected.
+
+### Font selection
 ```
 0xd4  # Font selection label
 0x73  # 13px text font
@@ -66,6 +68,7 @@ Some notable fonts are:
 ```
 > TODO: flesh out this list
 
+### Text
 ```
 0x45  # E
 0x58  # X
@@ -77,6 +80,7 @@ Some notable fonts are:
 ```
 The text is fairly basic ASCII codes. Some ASCII characters are replaced by swedish diacritic characters, such as Å `0x5d` in place of ], å `0x7d` in place of }, and more. ASCII codes that are not recognized by the display are disregarded.
 > TODO: Find all different ASCII codes.
+> One message may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be repeated, even if they are identical to a previous section. If any one parameter is omitted, the sign **disregards** that section of data.
 
 ## Footer
 ```
