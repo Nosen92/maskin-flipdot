@@ -23,7 +23,7 @@ Here is an example that simply writes EXAMPLE at the top left of the display:
 0x50  # P
 0x4c  # L
 0x45  # E
-0xad  # Checksum
+0xcd  # Checksum
 0xff  # Stop word
 ```
 Each message follows a standard format: **header**, **data**, and **footer**. Let's break it down.
@@ -80,7 +80,7 @@ The text is fairly basic ASCII codes. Some ASCII characters are replaced by swed
 
 ## Footer
 ```
-0xad  # Checksum
+0xcd  # Checksum
 0xff  # Stop word, always ff
 ```
 Every message ends with a footer, consisting of a checksum and the stop word `0xff`. The checksum is calculated by adding up all the previous characters in the message, and taking the lower two bytes of that sum. 
