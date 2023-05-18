@@ -1,1 +1,3 @@
 pyserial  # Library for using the Raspberry Pi GPIO RX and TX pins
+Pillow    # Library for image processing
+numpy     # Library for math operations
