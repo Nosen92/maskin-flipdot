@@ -80,6 +80,7 @@ Some notable fonts are:
 ```
 The text is fairly basic ASCII codes. Some ASCII characters are replaced by swedish diacritic characters, such as Å `0x5d` in place of ], å `0x7d` in place of }, and more. ASCII codes that are not recognized by the display are disregarded.
 > TODO: Find all different ASCII codes.
+
 > One message may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be repeated, even if they are identical to a previous section. If any one parameter is omitted, the sign **disregards** that section of data.
 
 ## Footer
