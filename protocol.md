@@ -1,9 +1,9 @@
 # Mobitec Sign Protocol
 
-To control the flipdot display, commands are sent using Mobitec's sign protocol. This protocol consists of a sequence of words i.e. two hex values.
+To control the flipdot display, commands are sent using Mobitec's sign protocol. This protocol consists of a sequence of bytes represented here with two hex values.
 Here is an example that simply writes EXAMPLE at the top left of the display:
 ```
-0xff  # Starting word      ⎫
+0xff  # Starting byte      ⎫
 0x06  # Sign address       ⎟
 0xa2  # Always a2          ⎟
 0xd0  # Display width      ⎬ Header
@@ -24,13 +24,13 @@ Here is an example that simply writes EXAMPLE at the top left of the display:
 0x4c  # L                  ⎟
 0x45  # E                  ⎭
 0xcd  # Checksum           ⎫ Footer
-0xff  # Stop word          ⎭
+0xff  # Stop byte          ⎭
 ```
 Each message can be divided into these parts: **header**, **data**, and **footer**. Let's break it down.
 
 ## Header
 ```
-0xff  # Starting word, always ff
+0xff  # Starting byte, always ff
 0x06  # Sign address, front signs are 0x06, side signs 0x07 and back signs 0x0a or 0x0b
 0xa2  # Always a2 (referred to as text mode)
 0xd0  # Display width label
@@ -86,12 +86,12 @@ The text is fairly basic ASCII codes. Some ASCII characters are replaced by swed
 ## Footer
 ```
 0xcd  # Checksum
-0xff  # Stop word, always ff
+0xff  # Stop byte, always ff
 ```
-Every message ends with a footer, consisting of a checksum and the stop word `0xff`. The checksum is calculated by adding up all the previous characters in the message, and taking the lower two bytes of that sum. 
->What happens when the checksum itself is `0xff`? That would conflict with the stop word. To account for this special case, the checksum is altered to the **two** words `0xfe` and `0x01`. Strangely, the checksum is also altered in the case when it's `0xfe`, then it becomes `0xfe` followed by `0x00`. 
+Every message ends with a footer, consisting of a checksum and the stop word `0xff`. The checksum is calculated by adding up all the previous characters in the message, and taking the lower two bytes of that sum. This is done both on the sender side, and display side. If the two checksums do not match, the display **disregards** the whole message.
+>What happens when the checksum itself is `0xff`? That would conflict with the stop byte. To account for this special case, the checksum is altered to the **two** words `0xfe` and `0x01`. Strangely, the checksum is also altered in the case when it's `0xfe`, then it becomes `0xfe` followed by `0x00`. 
 
-Then, the stop word caps off the message, letting the sign know that transmission of the message has ended.
+Then, the stop byte caps off the message, letting the sign know that transmission of the message is completed.
 
 ## Pixel Control
 To enable custom designs on the display, you can enter font code 0x77, which allows individual pixel control. This mode, or rather font, allows for any design on the display. It's not that elegantly implemented in the controller though. Instead of individual pixels or traditional letters, this font represents a 5-pixel high design, where each character is only 1 pixel wide. Every possible combination of these 5 pixels is assigned a unique character code.
