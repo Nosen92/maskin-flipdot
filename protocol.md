@@ -85,6 +85,7 @@ The text is fairly basic ASCII codes. Some ASCII characters are replaced by swed
 ```
 Every message ends with a footer, consisting of a checksum and the stop word `0xff`. The checksum is calculated by adding up all the previous characters in the message, and taking the lower two bytes of that sum. 
 >What happens when the checksum itself is `0xff`? That would conflict with the stop word. To account for this special case, the checksum is altered to the **two** words `0xfe` and `0x01`. Strangely, the checksum is also altered in the case when it's `0xfe`, then it becomes `0xfe` followed by `0x00`. 
+
 Then, the stop word caps off the message, letting the sign know that transmission of the message has ended.
 
 ## Pixel Control
