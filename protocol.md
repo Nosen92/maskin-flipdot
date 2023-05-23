@@ -1,5 +1,7 @@
 # Mobitec Sign Protocol
 
+> This document serves to explain the Mobitec protocol. It is not required reading to use the python code, since that handles all this for you.
+
 To control the flipdot display, commands are sent using Mobitec's sign protocol. This protocol consists of a sequence of bytes represented here with two hex values.
 Here is an example that simply writes EXAMPLE at the top left of the display:
 ```
@@ -26,7 +28,7 @@ Here is an example that simply writes EXAMPLE at the top left of the display:
 0xcd  # Checksum           ⎫ Footer
 0xff  # Stop byte          ⎭
 ```
-Each message can be divided into these parts: **header**, **data**, and **footer**. Let's break it down.
+Each packet can be divided into these parts: **header**, **data**, and **footer**. Let's break it down.
 
 ## Header
 ```
@@ -38,11 +40,11 @@ Each message can be divided into these parts: **header**, **data**, and **footer
 0xd1  # Display height label
 0x10  # 16 pixels wide (0x10 = 16 in decimal)
 ```
-This part only needs to be sent once per message. 
->TODO: See if resolution config is necessary on every message.
+This part only needs to be sent once per packet. 
+>TODO: See if resolution config is necessary in every packet.
 
 ## Data
-The data contains information about what to draw and where. 
+The data contains information about what to draw and where. Every data section **is required** to include an offset and font data, or it will be disregarded by the sign.
 
 ### Horizontal and vertical offset
 ```
@@ -60,13 +62,21 @@ Furthermore, it's important to note that the sign **disregards** any vertical of
 0xd4  # Font selection label
 0x73  # 13px text font
 ```
-This part tells the display what font is desired. There doesn't seem to be any rhyme or reason to this part, so more digging here is needed. There are some lists online, but they do not seem to match the behavior of our display.
-Some notable fonts are:
+This part instructs the display on which font to use for writing the text.
+> The lists of fonts available online (in other mobitec project repos) differ from one another, indicating that each display is programmed with a unique set of fonts. Only one font is consistent in all cases: The pixel control font `0x77`.
+
+The complete font list (yours might differ):
 ```
-0x77 - Pixel control
-0x65 - 13px text font
+"7px": 0x60, # Seems to be fallback font, for unknown font codes
+"7px_wide": 0x62,
+12px": 0x63,
+"13px": 0x64,
+"13px_wide": 0x65,
+"13px_wider": 0x69,
+16px_numbers": 0x68,
+"16px_numbers_wide": 0x6a,
+"pixel_subcolums": 0x77
 ```
-> TODO: flesh out this list
 
 ### Text
 ```
@@ -78,33 +88,64 @@ Some notable fonts are:
 0x4c  # L
 0x45  # E
 ```
-The text is fairly basic ASCII codes. Some ASCII characters are replaced by swedish diacritic characters, such as Å `0x5d` in place of ], å `0x7d` in place of }, and more. ASCII codes that are not recognized by the display are disregarded.
-> TODO: Find all different ASCII codes.
+The text is fairly basic ASCII codes. ASCII codes that are not recognized by the display are disregarded.
 
-> One message may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be repeated, even if they are identical to a previous section. If any one parameter is omitted, the sign **disregards** that section of data.
+Some ASCII characters are replaced by swedish diacritic characters.
+| Char |  Byte  | ASCII |
+|:----:|:------:|:-----:|
+|   Å  | `0x5d` |   ]   |
+|   å  | `0x7d` |   }   |
+|   Ä  | `0x5b` |   [   |
+|   ä  | `0x7b` |   {   |
+|   Ö  | `0x5c` |   \   |
+|   ö  | `0x7c` |   \|  |
+
+> One packet may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be repeated, even if they are identical to a previous section. If any one parameter is omitted, the sign **disregards** that section of data.
 
 ## Footer
 ```
 0xcd  # Checksum
 0xff  # Stop byte, always ff
 ```
-Every message ends with a footer, consisting of a checksum and the stop word `0xff`. The checksum is calculated by adding up all the previous characters in the message, and taking the lower two bytes of that sum. This is done both on the sender side, and display side. If the two checksums do not match, the display **disregards** the whole message.
->What happens when the checksum itself is `0xff`? That would conflict with the stop byte. To account for this special case, the checksum is altered to the **two** words `0xfe` and `0x01`. Strangely, the checksum is also altered in the case when it's `0xfe`, then it becomes `0xfe` followed by `0x00`. 
+Every packet ends with a footer, consisting of a checksum and the stop byte `0xff`. The checksum is calculated by adding up all the previous characters in the packet, and taking the lower two bytes of that sum. This is done both on the sender side, and display side. If the two checksums do not match, the display **disregards** the whole packet.
+>What happens when the checksum itself is `0xff`? That would conflict with the stop byte. To account for this special case, the checksum is altered to the **two** bytes `0xfe` and `0x01`. Strangely, the checksum is also altered in the case when it's `0xfe`, then it becomes `0xfe` followed by `0x00`.
 
-Then, the stop byte caps off the message, letting the sign know that transmission of the message is completed.
+Then, the stop byte caps off the packet, letting the sign know that transmission of the packet is completed.
 
-## Pixel Control
-To enable custom designs on the display, you can enter font code 0x77, which allows individual pixel control. This mode, or rather font, allows for any design on the display. It's not that elegantly implemented in the controller though. Instead of individual pixels or traditional letters, this font represents a 5-pixel high design, where each character is only 1 pixel wide. Every possible combination of these 5 pixels is assigned a unique character code.
+## Pixel Control with subcolumns
+To enable custom designs on the display, you can enter font code 0x77, which allows individual pixel control. This mode, or rather font, allows for any design on the display. It's not that elegantly implemented in the controller though. Instead of individual pixels or traditional letters, this font represents a 5-pixel high design, where each character is only 1 pixel wide. We call these **subcolumns**. Every possible combination of these 5 pixels is assigned a unique character code.
 
 This number is obtained like this: Assign 1 to the top pixel, 2 to the second one, 4 to the third, 8 to the 4th and 16 to the 5th. Add up the pixels that should be 'lit'. Then add 32. The sum is that character's code. By iterating over the display 5 rows at a time, the whole display can be drawn in any design.
 
 ```
-⚪ -  1
-⚫ -  2
-⚪ -  4
-⚫ -  8
-⚫ - 16
+⚫ -  1
+⚪ -  2
+⚫ -  4
+⚪ -  8
+⚪ - 16
 ```
-In the above example, we want pixels 2, 8 and 16 to be lit up. The character code needed is 2 + 8 + 16 + 32 = 58 = 0x3a.
+In the above example, we want pixels 2, 8 and 16 to be lit up. The character code needed is 2 + 8 + 16 + 32 = 58 = 0x3a. If we only want the top pixel to be lit, the character code is 1 + 32 = 33 = 0x21.
 
+These six bytes:
+```
+0x20
+0x2a
+0x20
+0x31
+0x2e
+0x20
+```
+make up this smiley face:
+```
+⚫⚫⚫⚪⚫⚫
+⚫⚪⚫⚫⚪⚫
+⚫⚫⚫⚫⚪⚫
+⚫⚪⚫⚫⚪⚫
+⚫⚫⚫⚪⚫⚫
+```
+Designs taller than 5px are of course possible by dividing the design into 5px bands and then writing one data section for each band.
+
+## Multiple data sections
+One packet may contain an arbitrary number of data sections. They may all have different offsets and fonts from one another. You can even have overlapping data sections. 
+> All pixels that are ordered to be lit by any data section, stay lit. In effect, the sign considers black to be transparent.
 
