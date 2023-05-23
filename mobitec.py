@@ -18,16 +18,18 @@ class MobitecDisplay:
         "offset_y" (byte): Vertical offset of text.
     """
     
-    def __init__(self, address, width, height):
+    def __init__(self, port, fonts, address, width, height):
         """Makes a display object."""
+        self.port = port
         self.address = address
         self.width = width
         self.height = height
+        self.fonts = fonts
+        self.current_font = fonts["7px"]
         self.cursor = {
             "x": 0,
             "y": 0
         }
-        self.font = 0x60  # 7px default font
         self.image_buffer = []
         self.text_buffer = []
         
@@ -42,11 +44,7 @@ class MobitecDisplay:
         header = self._packet_header()
         packet.extend(header)
         for text in self.text_buffer:
-            string = text["string"]
-            font = text["font"]
-            offset_x = text["offset_x"]
-            offset_y = text["offset_y"]
-            text_code = self._text_to_mp(string, font, offset_x, offset_y)
+            text_code = self._text_to_mp(text)
             packet.extend(text_code)
         for image in self.image_buffer:
             string = image["bitmap"]
@@ -78,10 +76,14 @@ class MobitecDisplay:
             check_sum.append(packet_sum)
         return check_sum
 
-    def _text_to_mp(self, text, font, horizontal_offset, vertical_offset):
+    def _text_to_mp(self, text):
         """Converts text string to mobitec protocol.
         Accounts for deviations from ASCII codes."""
-        data = self._data_header(font, horizontal_offset, vertical_offset)
+        horizontal_offset = text.pos_x
+        vertical_offset = text.pos_y + text.font.height  # Compensation for quirky offset
+        if text.font.name == "pixel_subcolumns":  # Don't ask me why
+            vertical_offset -= 1
+        data = self._data_header(text.font.code, horizontal_offset, vertical_offset)
         special_char_mapping = {
             "Å": 0x5d,
             "å": 0x7d,
@@ -90,16 +92,12 @@ class MobitecDisplay:
             "Ö": 0x5c,
             "ö": 0x7c
         }
-        try:
-            for char in text:
-                if char in special_char_mapping:
-                    char = special_char_mapping[char]
-                else:
-                    char = ord(char)
-                data.append(char)
-        except TypeError:
-            #print("Warning, _text_to_mp raised TypeError. Appending directly.")
-            data.append(text)
+        for char in text.string:
+            if char in special_char_mapping:
+                char = special_char_mapping[char]
+            else:
+                char = ord(char)
+            data.append(char)
         return data
         
     def _bitmap_to_mp(self, text, font, horizontal_offset, vertical_offset):
@@ -138,61 +136,41 @@ class MobitecDisplay:
         
     def display(self):
         packet = self._create_packet()
-        with serial.Serial(port, 4800, timeout=1) as ser:
+        with serial.Serial(self.port, 4800, timeout=1) as ser:
             ser.write(packet)
             
     def clear_display(self):
         """Clears the display buffer."""
         self.text_buffer = []
         self.image_buffer = []
-        return
         
     def set_cursor(self, x, y):
         self.cursor = {
             "x": x,
             "y": y
         }
-        return
         
     def set_font(self, font):
-        fonts = {
-            "7px": 0x60, # Seems to be fallback font, for unknown font codes
-            "7px_wide": 0x62,
-            "12px": 0x63,
-            "13px": 0x64,
-            "13px_wide": 0x65,
-            "13px_wider": 0x69,
-            "16px_numbers": 0x68,
-            "16px_numbers_wide": 0x6a,
-            "pixel_subcolums": 0x77
-        }
-        self.font = fonts[font]
-        return
+        self.current_font = self.fonts[font]
     
     def print_text(self, string):
         """Adds text to the text buffer."""
-        text = {
-            "string": string,
-            "font": self.font,
-            "offset_x": self.cursor["x"],
-            "offset_y": self.cursor["y"]
-        }
+        text = Text(string, self.current_font, self.cursor["x"], self.cursor["y"])
         self.text_buffer.append(text)
         
-    def dvd_screensaver(self):
+    def dvd_screensaver(self, fps):
         """One pixel bounces off the sides of the display indefinitely."""
         down = True
         right = True
         x = 0
-        y = 4
-        self.set_font("pixel_subcolums")
+        y = 0
+        self.set_font("pixel_subcolumns")
         while True:
             self.clear_display()
-            self.cursor["x"] = x
-            self.cursor["y"] = y
-            self.print_text(33)  # Just top pixel
+            self.set_cursor(x, y)
+            self.print_text("!")  # Just top pixel
             self.display()
-            sleep(0.3)
+            sleep(1/fps)
             if right:
                 x = x + 1
             else:
@@ -205,11 +183,26 @@ class MobitecDisplay:
                 right = False
             if x == 0:
                 right = True
-            if y == self.height + 3:
+            if y == self.height - 1:
                 down = False
-            if y == 4:
+            if y == 0:
                 down = True
-             
+
+class Font:
+
+    def __init__(self, name, height, code):
+        self.name = name
+        self.height = height
+        self.code = code
+        
+class Text:
+
+    def __init__(self, string, font, pos_x, pos_y):
+        self.string = string
+        self.font = font
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+
 if __name__ == "__main__":
     """Example usage."""
 
@@ -218,21 +211,42 @@ if __name__ == "__main__":
     port = "/dev/ttyUSB0" # Jonas
     #port = "COM4" # Kasper
     
-    flipdot = MobitecDisplay(address=0x0b, width=28, height=13)
-    flipdot.set_font("7px")
-    flipdot.set_cursor(1, 6)
+    fonts = {
+            # name, height, code
+            "7px": Font("7px", 7, 0x60),
+            "7px_wide": Font("7px_wide", 7, 0x62),
+            "12px": Font("12px", 12, 0x63),
+            "13px": Font("13px", 13, 0x64),
+            "13px_wide": Font("13px_wide", 13, 0x65),
+            "13px_wider": Font("13px_wider", 13, 0x69),
+            "16px_numbers": Font("16px_numbers", 16, 0x68),
+            "16px_numbers_wide": Font("16px_numbers_wide", 16, 0x6a),
+            "pixel_subcolumns": Font("pixel_subcolumns", 5, 0x77)
+    }
+    flipdot = MobitecDisplay(port, fonts, address=0x0b, width=28, height=13)
+    
+    flipdot.set_font("13px_wider")
+    flipdot.set_cursor(0, 0)
     flipdot.print_text("Test")
-    flipdot.set_cursor(14, 13)
+    flipdot.display()
+    sleep(1)
+    flipdot.clear_display()
+    flipdot.set_cursor(7, 6)
     flipdot.print_text("text")
     flipdot.display()
-    sleep(2)
+    sleep(1)
     flipdot.clear_display()
-    flipdot.set_cursor(14, 6)
+    flipdot.set_cursor(5, 0)
     flipdot.print_text("Hello")
-    flipdot.set_cursor(1, 13)
+    flipdot.display()
+    sleep(1)
+    flipdot.clear_display()
+    flipdot.set_cursor(0, 6)
     flipdot.print_text("world")
     flipdot.display()
-    sleep(2)
+    sleep(1)
     # Add bitmap example too
-    flipdot.dvd_screensaver()
+    
+    
+    flipdot.dvd_screensaver(2)
 
