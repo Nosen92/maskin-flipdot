@@ -47,6 +47,10 @@ To use the project, run the following command:
 
 This will start the program and begin controlling the flipdot displays.
 
+The mobitec.py file contains a class that handles all communication using the mobitec protocol.
+
+See [protocol.md](protocol.md) documentation for more info about the mobitec protocol.
+
 ## Contributing
 
 If you would like to contribute to this project, please open an issue or submit a pull request on GitHub.
