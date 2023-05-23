@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep  # Only used for dvd screensaver and examples
 
 class MobitecDisplay:
     """MobitecDisplay is a class that creates display objects, in order 
@@ -30,6 +30,10 @@ class MobitecDisplay:
         self.font = 0x60  # 7px default font
         self.image_buffer = []
         self.text_buffer = []
+        
+    def __bytes__(self):
+        packet = self._create_packet()
+        return packet
         
     def _create_packet(self):
         """Serializes all data and generates a complete Mobitec packet."""
@@ -122,7 +126,7 @@ class MobitecDisplay:
         return header
 
     def _packet_header(self):
-        """Generates mobitec protocol packet header"""
+        """Generates mobitec protocol packet header."""
         header = bytearray()
         header.append(self.address)
         header.append(0xa2) # Text mode
@@ -137,20 +141,20 @@ class MobitecDisplay:
         with serial.Serial(port, 4800, timeout=1) as ser:
             ser.write(packet)
             
-    def clearDisplay(self):
+    def clear_display(self):
         """Clears the display buffer."""
         self.text_buffer = []
         self.image_buffer = []
         return
         
-    def setCursor(self, x, y):
+    def set_cursor(self, x, y):
         self.cursor = {
             "x": x,
             "y": y
         }
         return
         
-    def setFont(self, font):
+    def set_font(self, font):
         fonts = {
             "7px": 0x60, # Seems to be fallback font, for unknown font codes
             "7px_wide": 0x62,
@@ -181,9 +185,9 @@ class MobitecDisplay:
         right = True
         x = 0
         y = 4
-        self.setFont("pixel_subcolums")
+        self.set_font("pixel_subcolums")
         while True:
-            self.clearDisplay()
+            self.clear_display()
             self.cursor["x"] = x
             self.cursor["y"] = y
             self.print_text(33)  # Just top pixel
@@ -207,6 +211,7 @@ class MobitecDisplay:
                 down = True
              
 if __name__ == "__main__":
+    """Example usage."""
 
     import serial
     #port = "/dev/ttyS0" # RPi
@@ -214,7 +219,20 @@ if __name__ == "__main__":
     #port = "COM4" # Kasper
     
     flipdot = MobitecDisplay(address=0x0b, width=28, height=13)
+    flipdot.set_font("7px")
+    flipdot.set_cursor(1, 6)
+    flipdot.print_text("Test")
+    flipdot.set_cursor(14, 13)
+    flipdot.print_text("text")
+    flipdot.display()
+    sleep(2)
+    flipdot.clear_display()
+    flipdot.set_cursor(14, 6)
+    flipdot.print_text("Hello")
+    flipdot.set_cursor(1, 13)
+    flipdot.print_text("world")
+    flipdot.display()
+    sleep(2)
+    # Add bitmap example too
     flipdot.dvd_screensaver()
-
-# Freaky stuff: character codes 0x8b, 0x93, 0x9f
 
