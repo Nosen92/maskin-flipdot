@@ -1,7 +1,9 @@
 from time import sleep  # Only used for dvd screensaver and examples
-
+import designs
+import serial
 class MobitecDisplay:
-    """MobitecDisplay is a class that creates display objects, in order 
+    """
+    MobitecDisplay is a class that creates display objects, in order 
     to easily communicate with displays using Mobitec's network protocol.
     Attributes:
         address (byte): Hardware address of the display controller.
@@ -10,7 +12,7 @@ class MobitecDisplay:
         cursor (dict): Stores cursor position for text placement.
         font (byte): Internal font code to send with the text.
         image_buffer (list of dicts): Stores image data before sending to display.
-        text_buffer (list of dicts): Stores text data before sending to display.
+        text_buffer (list of dicts): Stores Text objects before sending to display.
     Text information is stored as a dict with these keys:
         "string" (string): Text string to be written.
         "font" (byte): What font to use.
@@ -33,10 +35,6 @@ class MobitecDisplay:
         self.image_buffer = []
         self.text_buffer = []
         
-    def __bytes__(self):
-        packet = self._create_packet()
-        return packet
-        
     def _create_packet(self):
         """Serializes all data and generates a complete Mobitec packet."""
         packet = bytearray()
@@ -47,10 +45,8 @@ class MobitecDisplay:
             text_code = self._text_to_mp(text)
             packet.extend(text_code)
         for image in self.image_buffer:
-            string = image["bitmap"]
-            offset_x = text["offset_x"]
-            offset_y = text["offset_y"]
-            self._bitmap_to_mp(string, font, offset_x, offset_y)
+            image_code = self._bitmap_to_mp(image)
+            packet.extend(image_code)
         check_sum_byte = self._calculate_check_sum(packet)
         packet.extend(check_sum_byte)
         packet.append(0xff) # Stop byte
@@ -77,12 +73,12 @@ class MobitecDisplay:
         return check_sum
 
     def _text_to_mp(self, text):
-        """Converts text string to mobitec protocol.
+        """Serializes text object to mobitec protocol.
         Accounts for deviations from ASCII codes."""
         horizontal_offset = text.pos_x
         vertical_offset = text.pos_y + text.font.height  # Compensation for quirky offset
-        if text.font.name == "pixel_subcolumns":  # Don't ask me why
-            vertical_offset -= 1
+        if text.font.name == "pixel_subcolumns":
+            vertical_offset -= 1  # Don't ask me why
         data = self._data_header(text.font.code, horizontal_offset, vertical_offset)
         special_char_mapping = {
             "Å": 0x5d,
@@ -100,17 +96,23 @@ class MobitecDisplay:
             data.append(char)
         return data
         
-    def _bitmap_to_mp(self, text, font, horizontal_offset, vertical_offset):
-        """Converts bitmap matrix to mobitec protocol."""
+    def _bitmap_to_mp(self, bitmap):
+        """Serializes bitmap to mobitec protocol."""
         data = bytearray()
-        bitwise_fontcode = 0x77
-        for i in range(1, height//5 +1):
-            data_header = self._data_header(bitwise_fontcode, horizontal_offset, vertical_offset=i*5-1)
+        mobitec_subcolumn_matrix = bitmap.convert_to_sm()
+        for band in range(len(mobitec_subcolumn_matrix)):
+            data_header = self._data_header(0x77, bitmap.pos_x, bitmap.pos_y + band * 5 + 4)
             data.extend(data_header)
-            
-        
-
+            for subcolumn in range(bitmap.width):
+                subcolumn_code = self.addBits(mobitec_subcolumn_matrix[band][subcolumn])
+                data.append(subcolumn_code)
         return data
+
+    def addBits(self, bits):
+        ret = 32
+        for i in range(len(bits)):
+            ret += bits[i]*2**i
+        return ret
 
     def _data_header(self, font, horizontal_offset, vertical_offset):
         """Generates mobitec protocol data section header."""
@@ -135,6 +137,7 @@ class MobitecDisplay:
         return header
         
     def display(self):
+        """Sends contents of the buffer to the display."""
         packet = self._create_packet()
         with serial.Serial(self.port, 4800, timeout=1) as ser:
             ser.write(packet)
@@ -145,18 +148,35 @@ class MobitecDisplay:
         self.image_buffer = []
         
     def set_cursor(self, x, y):
+        """Set the cursor to x y position."""
         self.cursor = {
             "x": x,
             "y": y
         }
         
     def set_font(self, font):
+        """Chooses font to write text with."""
         self.current_font = self.fonts[font]
     
     def print_text(self, string):
         """Adds text to the text buffer."""
         text = Text(string, self.current_font, self.cursor["x"], self.cursor["y"])
         self.text_buffer.append(text)
+        
+    def print_image(self, image):
+        """Adds text to the text buffer."""
+        self.image_buffer.append(image)
+        
+    def draw_pixel(self, x, y):
+        """Flips a single pixel on. Note: unable to turn pixels off."""
+        temp_pixelfont = self.current_font.name != "pixel_subcolumns"  # Check if another font is used
+        if temp_pixelfont:
+            original_font = self.current_font.name
+        self.set_font("pixel_subcolumns")
+        self.set_cursor(x, y)
+        self.print_text("!")  # Just top pixel
+        if temp_pixelfont:
+            self.set_font(original_font)
         
     def dvd_screensaver(self, fps):
         """One pixel bounces off the sides of the display indefinitely."""
@@ -167,8 +187,7 @@ class MobitecDisplay:
         self.set_font("pixel_subcolumns")
         while True:
             self.clear_display()
-            self.set_cursor(x, y)
-            self.print_text("!")  # Just top pixel
+            self.draw_pixel(x, y)
             self.display()
             sleep(1/fps)
             if right:
@@ -187,26 +206,117 @@ class MobitecDisplay:
                 down = False
             if y == 0:
                 down = True
-
+                
+    def clock(self):
+        clock_bm = Bitmap(28, 13, 0, 0)
+        draw_line(clock_bm.bitmap, 0, 0, 5, 10)
+        
 class Font:
-
+    """
+    Basic font objects.
+    Attributes:
+        name (string): Name of font.
+        height (byte): Height of the font. Used for cursor fix.
+        code (byte): Font code used by the sign. Between 0x60 - 0x80.
+    """
     def __init__(self, name, height, code):
         self.name = name
         self.height = height
         self.code = code
         
 class Text:
-
+    """
+    Basic text objects. Gets queued in the buffer.
+    Attributes:
+        string (string): Text to be written.
+        font (Font): Font to write the text with.
+        pos_x (byte): Horizontal offset from left side.
+        pos_y (byte): Vertical offset from upper side.
+    """
     def __init__(self, string, font, pos_x, pos_y):
         self.string = string
         self.font = font
         self.pos_x = pos_x
         self.pos_y = pos_y
+        
+class Bitmap:
+    """
+    Basic bitmap objects. Gets queued in the image buffer.
+    Attributes:
+        width (byte): Bitmap width.
+        height (byte): Bitmap height.
+        pos_x (byte): Horizontal offset from left side.
+        pos_y (byte): Vertical offset from upper side.
+        bitmap (list of lists): Bitmap. Adressed like this: bitmap[y][x]
+    """
+    def __init__(self, width, height, pos_x, pos_y):
+        self.width = width
+        self.height = height
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        self.bitmap = [[False] * self.width for _ in range(self.height)]  # Create x*y matrix
+    
+    def convert_to_sm(self):
+        """Converts a regular bitmap to subcolumn matrix."""
+        subcolumn_matrix = []
+        for full_bands in range(self.height//5):
+            band = []
+            for subcolumns in range(self.width):
+                subcolumn = []
+                for subcolumn_pixel in range(5):
+                    subcolumn.append(self.bitmap[full_bands * 5 + subcolumn_pixel][subcolumns])
+                band.append(subcolumn)
+            subcolumn_matrix.append(band)
+        if self.height%5 != 0:
+            band = []
+            for subcolumns in range(self.width):
+                subcolumn = []
+                for subcolumn_pixel in range(self.height - self.height%5, self.height):
+                    subcolumn.append(self.bitmap[subcolumn_pixel][subcolumns])
+                band.append(subcolumn)
+            subcolumn_matrix.append(band)
+        return subcolumn_matrix
+        
+def draw_line(matrix, x1, y1, x2, y2):
+    dx = abs(x2 - x1)
+    dy = abs(y2 - y1)
+    sx = 1 if x1 < x2 else -1
+    sy = 1 if y1 < y2 else -1
+    err = dx - dy
+    
+    while x1 != x2 or y1 != y2:
+        matrix[y1][x1] = 1
+        e2 = 2 * err
+        if e2 > -dy:
+            err -= dy
+            x1 += sx
+        if e2 < dx:
+            err += dx
+            y1 += sy
+    
+    matrix[y1][x1] = 1
+        
+def png_to_bitmap(image_path):
+    image = Image.open(image_path)
+    image = image.convert("L")  # Greyscale
+    image = image.resize((28, 13))
+    width, height = image.size
+    bm = Bitmap(width, height, 0, 0)  # Initialize bitmap
+    for y in range(height):
+        for x in range(width):
+            brightness = image.getpixel((x, y))
+            bm.bitmap[y][x] = brightness < 128
+    return bm
+
 
 if __name__ == "__main__":
     """Example usage."""
 
     import serial
+    from PIL import Image
+    import datetime
+    import math
+    
     #port = "/dev/ttyS0" # RPi
     port = "/dev/ttyUSB0" # Jonas
     #port = "COM4" # Kasper
@@ -223,28 +333,19 @@ if __name__ == "__main__":
             "16px_numbers_wide": Font("16px_numbers_wide", 16, 0x6a),
             "pixel_subcolumns": Font("pixel_subcolumns", 5, 0x77)
     }
-    flipdot = MobitecDisplay(port, fonts, address=0x0b, width=28, height=13)
+    flipdot = MobitecDisplay(port, fonts, address=0x0b, width=28, height=13)    
+        
+    flipdot.clear_display()
+    bm = Bitmap(28, 13, 0, 0)
+    bm.bitmap = designs.circle
     
-    flipdot.set_font("13px_wider")
-    flipdot.set_cursor(0, 0)
-    flipdot.print_text("Test")
+    print("Current time: {:02d}:{:02d}:{:02d}".format(hour, minute, second))
+
+
+
+    flipdot.print_image(bm)
     flipdot.display()
-    sleep(1)
-    flipdot.clear_display()
-    flipdot.set_cursor(7, 6)
-    flipdot.print_text("text")
-    flipdot.display()
-    sleep(1)
-    flipdot.clear_display()
-    flipdot.set_cursor(5, 0)
-    flipdot.print_text("Hello")
-    flipdot.display()
-    sleep(1)
-    flipdot.clear_display()
-    flipdot.set_cursor(0, 6)
-    flipdot.print_text("world")
-    flipdot.display()
-    sleep(1)
+    input()
     # Add bitmap example too
     
     
