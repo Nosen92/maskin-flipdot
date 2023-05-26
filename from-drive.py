@@ -6,6 +6,8 @@ import time
 def drive_to_bitmap(sheet_name="Flip Dot Code Generator", worksheet_name="ut28x13", width=112, height=16):
     """Requires a gspread service key, only kasper has one"""
     
+    #Google sheet: https://docs.google.com/spreadsheets/d/18SiSeSraX6rx-ywxVBl0WOyGEI1JdRoLcY7699Y3k_U/edit?fbclid=IwAR2jnb5gWQbeTzAZwJJPDlf9KJpwlD9il3ta9T7Z5xMizKjno6-QchTXLVg#gid=255959702
+    #Note: google services account required, ask Kasper
 
     gc = gspread.service_account()
 
