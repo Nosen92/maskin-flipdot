@@ -9,7 +9,7 @@ class MobitecDisplay:
         address (byte): Hardware address of the display controller.
         width (byte): Horizontal resolution of the display.
         height (byte): Vertical resolution of the display.
-        cursor (dict): Stores cursor position for text placement.
+        position (dict): Stores position for text placement.
         font (byte): Internal font code to send with the text.
         image_buffer (list of dicts): Stores image data before sending to display.
         text_buffer (list of dicts): Stores Text objects before sending to display.
@@ -28,7 +28,7 @@ class MobitecDisplay:
         self.height = height
         self.fonts = fonts
         self.current_font = fonts["7px"]
-        self.cursor = {
+        self.position = {
             "x": 0,
             "y": 0
         }
@@ -147,9 +147,9 @@ class MobitecDisplay:
         self.text_buffer = []
         self.image_buffer = []
         
-    def set_cursor(self, x, y):
-        """Set the cursor to x y position."""
-        self.cursor = {
+    def set_position(self, x, y):
+        """Set the x y position."""
+        self.position = {
             "x": x,
             "y": y
         }
@@ -160,7 +160,7 @@ class MobitecDisplay:
     
     def print_text(self, string):
         """Adds text to the text buffer."""
-        text = Text(string, self.current_font, self.cursor["x"], self.cursor["y"])
+        text = Text(string, self.current_font, self.position["x"], self.position["y"])
         self.text_buffer.append(text)
         
     def print_image(self, image):
@@ -173,7 +173,7 @@ class MobitecDisplay:
         if temp_pixelfont:
             original_font = self.current_font.name
         self.set_font("pixel_subcolumns")
-        self.set_cursor(x, y)
+        self.set_position(x, y)
         self.print_text("!")  # Just top pixel
         if temp_pixelfont:
             self.set_font(original_font)
@@ -206,17 +206,13 @@ class MobitecDisplay:
                 down = False
             if y == 0:
                 down = True
-                
-    def clock(self):
-        clock_bm = Bitmap(28, 13, 0, 0)
-        draw_line(clock_bm.bitmap, 0, 0, 5, 10)
         
 class Font:
     """
     Basic font objects.
     Attributes:
         name (string): Name of font.
-        height (byte): Height of the font. Used for cursor fix.
+        height (byte): Height of the font. Used for position glitch fix.
         code (byte): Font code used by the sign. Between 0x60 - 0x80.
     """
     def __init__(self, name, height, code):
@@ -333,17 +329,15 @@ if __name__ == "__main__":
             "16px_numbers_wide": Font("16px_numbers_wide", 16, 0x6a),
             "pixel_subcolumns": Font("pixel_subcolumns", 5, 0x77)
     }
-    flipdot = MobitecDisplay(port, fonts, address=0x0b, width=28, height=13)    
+    flipdot = MobitecDisplay(port, fonts, address=0x06, width=112, height=16)
         
     flipdot.clear_display()
-    bm = Bitmap(28, 13, 0, 0)
-    bm.bitmap = designs.circle
-    
-    print("Current time: {:02d}:{:02d}:{:02d}".format(hour, minute, second))
+    bm = Bitmap(28, 13, 2, 2)
+    bm.bitmap = designs.standard_m
 
-
-
-    flipdot.print_image(bm)
+    flipdot.set_position(3, 0)
+    flipdot.set_font("13px_wide")
+    flipdot.print_text("Smörjkammaren")
     flipdot.display()
     input()
     # Add bitmap example too
