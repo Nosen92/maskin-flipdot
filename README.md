@@ -1,14 +1,10 @@
 # maskin-flipdot
 
-This project uses a Raspberry Pi Zero W and a MAX485 chip to control Mobitec flipdot displays.
+Python library for driving mobitec flipdot displays using serial communication.
 
 ## Hardware
 
-The hardware used in this project includes:
-
-- Raspberry Pi Zero W
-- MAX485 chip
-- Mobitec flipdot display
+This library is tested with a MAX485 module for converting the TTL serial signals to RS-485.
 
 <p align="center">
   <img src="schematic.png" width="33%" height="33%">
@@ -21,6 +17,8 @@ The pinout from the mobitec flipdot display is:
 - Black — Ground
 - White — RS-485 D+ (A)
 - Green — RS-485 D- (B)
+
+See [protocol.md](protocol.md) documentation for more info about the mobitec protocol.
 
 ## Installation
 
@@ -41,15 +39,18 @@ To use this project, you'll need to do the following:
 
 ## Usage
 
-To use the project, run the following command:
+The mobitec.py file contains a class that handles all communication using the [mobitec protocol](protocol.md).
+The methods for driving the display include:
 
-`python maskin_flipdot.py`
+- `print_text("Example")`Prints a text string.
+- `print_image(standard_m)` Prints an image.
+- `draw_pixel(x, y)` Flips a single pixel at the coordinates (x, y).
+- `display()` Updates the display (applies all commands in buffer).
+- `clear_display()` Clears the memory buffers.
+- `set_font(13px_wide)` Changes the selected font when writing text.
+- `set_cursor(x, y)` Moves the position where the text will be printed.
 
-This will start the program and begin controlling the flipdot displays.
-
-The mobitec.py file contains a class that handles all communication using the mobitec protocol.
-
-See [protocol.md](protocol.md) documentation for more info about the mobitec protocol.
+See example files for further guidance or reference.
 
 ## Contributing
 
