@@ -8,19 +8,23 @@ def drive_to_bitmap(sheet_name="Flip Dot Code Generator", worksheet_name="ut28x1
     
     #Google sheet: https://docs.google.com/spreadsheets/d/18SiSeSraX6rx-ywxVBl0WOyGEI1JdRoLcY7699Y3k_U/edit?fbclid=IwAR2jnb5gWQbeTzAZwJJPDlf9KJpwlD9il3ta9T7Z5xMizKjno6-QchTXLVg#gid=255959702
     #Note: google services account required, ask Kasper
+    try:
+        gc = gspread.service_account()
 
-    gc = gspread.service_account()
-
-    sh = gc.open(sheet_name)
-    arr = sh.worksheet(worksheet_name).get_all_values()
-    bm = mobitec.Bitmap(width, height, 0, 0)  # Initialize bitmap
-    for j in range(0, len(arr)):
-        for i in range(0, len(arr[j])):
-            if arr[j][i] == "1":
-                bm.bitmap[j][i] = 1
-            elif arr[j][i] == "0":
-                bm.bitmap[j][i] = 0
-    return bm
+        sh = gc.open(sheet_name)
+        arr = sh.worksheet(worksheet_name).get_all_values()
+        bm = mobitec.Bitmap(width, height, 0, 0)  # Initialize bitmap
+        for j in range(0, len(arr)):
+            for i in range(0, len(arr[j])):
+                if arr[j][i] == "1":
+                    bm.bitmap[j][i] = 1
+                elif arr[j][i] == "0":
+                    bm.bitmap[j][i] = 0
+        return bm
+    except Exception as e: #if google failed
+        print("Sheet download failed:")
+        print(e)
+        return None
 
 
 def drive_display():
@@ -41,16 +45,20 @@ def drive_display():
             "pixel_subcolumns": mobitec.Font("pixel_subcolumns", 5, 0x77)
     }
 
-    flipdot = mobitec.MobitecDisplay(port, fonts, address=0x06, width=112, height=16)     
+    flipdot = mobitec.MobitecDisplay(port, fonts, address=0x06, width=112, height=16)    
+    old_bm = None
 
     while(True):
         bm = drive_to_bitmap(worksheet_name="ut112x16", height = 16)
-
-        flipdot.print_image(bm)
-            
-        flipdot.display()
-        flipdot.clear_display()
-        time.sleep(1)
+        if bm: #if drive download failed
+            if bm != old_bm:
+                print("New Data!")
+                flipdot.print_image(bm)
+                    
+                flipdot.display()
+                flipdot.clear_display()
+                old_bm = bm
+        time.sleep(2)
 
 
 

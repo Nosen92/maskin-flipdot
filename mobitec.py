@@ -272,6 +272,18 @@ class Bitmap:
                 band.append(subcolumn)
             subcolumn_matrix.append(band)
         return subcolumn_matrix
+    
+    def __eq__(self, other):
+        for y in range(0, self.height):
+            for x in range(0, self.width):
+                try:
+                    if self.bitmap[y][x] != other.bitmap[y][x]:
+                        return False
+                except Exception as e:
+                    print("Error!")
+                    print(e)
+                    return False
+        return True
         
 def draw_line(matrix, x1, y1, x2, y2):
     dx = abs(x2 - x1)
