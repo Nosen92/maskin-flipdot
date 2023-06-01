@@ -1,5 +1,4 @@
 #scaled down version with only core funtionality
-import serial
 class MobitecDisplay:
     """
     MobitecDisplay is a class that creates display objects, in order 

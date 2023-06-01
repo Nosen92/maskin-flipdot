@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Image to Binary Conversion</title>
+  <script src="jquery.js"></script>
+</head>
+
+<body>
+  <input type="file" id="upload" accept="image/*" />
+  <button onclick="convertImage()">Convert and Send</button>
+
+  <script>
+    function convertImage() {
+      var fileInput = document.getElementById('upload');
+      var file = fileInput.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function (e) {
+        var img = new Image();
+        img.src = e.target.result;
+
+        img.onload = function () {
+          var canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          var pixels = imageData.data;
+          var binaryString = '';
+
+          for (var i = 0; i < pixels.length; i += 4 * canvas.width) {
+            for (var j = i; j < i + 4 * canvas.width; j += 4) {
+              var r = pixels[j];
+              var g = pixels[j + 1];
+              var b = pixels[j + 2];
+              var a = pixels[j + 3];
+
+              // Convert to grayscale value (0-255)
+              var grayValue = (r + g + b) / 3;
+
+              // Convert to binary (0 or 1) based on threshold
+              var binaryValue = grayValue > 0.7 * 255 ? 0 : 1;
+
+              binaryString += binaryValue;
+            }
+            binaryString += ";"
+          }
+          console.log(binaryString)
+          sendToServer(binaryString);
+        };
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function sendToServer(binaryString) {
+      // You can use AJAX to send the binaryString to the server
+      // Here's an example using jQuery's AJAX method:
+      var form = $('#fileUploadForm')[0];
+
+		  // Create an FormData object 
+        var data = new FormData(form);
+
+		  // If you want to add an extra field for the FormData
+        data.append("binaryString", binaryString);
+
+      $.ajax({
+        type: 'POST',
+        url: '/upload',
+        enctype: 'multipart/form-data',
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        data: data,
+        success: function (response) {
+          console.log('Binary image data sent to the server successfully!');
+        },
+        error: function (error) {
+          console.error('Error sending binary image data to the server:', error);
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>
