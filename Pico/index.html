@@ -2,18 +2,24 @@
 <html>
 
 <head>
-  <title>Image to Binary Conversion</title>
+  <title>SmörjisSkylten</title>
   <script src="jquery.js"></script>
 </head>
 
 <body>
+  <p><b>Stora skylten</b></p>
+  <p>Välj en bild med format .png eller .jpg, den måste vara 112 pixlar bred och 16 pixlar hög.</p>
+  <p>För bästa resultat bör bilden endast innehålla svarta och vita pixlar, de svarta pixlarna kommer bli gröna på
+    skylten.</p>
+
   <input type="file" id="upload" accept="image/*" />
-  <button onclick="convertImage()">Convert and Send</button>
+  <button onclick="convertImage()">Skicka till skylten</button>
 
   <script>
     function convertImage() {
       var fileInput = document.getElementById('upload');
       var file = fileInput.files[0];
+      var extension = fileInput.files[0].name.split('.').pop().toLowerCase();  //file extension from input file
       var reader = new FileReader();
 
       reader.onload = function (e) {
@@ -49,8 +55,19 @@
             }
             binaryString += ";"
           }
-          console.log(binaryString)
-          sendToServer(binaryString);
+
+          var fileTypes = ['jpg', 'jpeg', 'png'];  //acceptable file types
+          if (fileTypes.indexOf(extension) > -1) {
+            sendToServer(binaryString);
+          } else {
+            alert('Felaktigt filformat! Endast png och jpeg är tillåtet!');
+          }
+
+          if (canvas.width == 112 && canvas.height == 16) {
+            sendToServer(binaryString);
+          } else {
+            alert('Felaktig dimension! Bildfilen måste vara 112 pixlar bred och 16 pixlar hög!');
+          }
         };
       };
 
@@ -62,11 +79,11 @@
       // Here's an example using jQuery's AJAX method:
       var form = $('#fileUploadForm')[0];
 
-		  // Create an FormData object 
-        var data = new FormData(form);
+      // Create an FormData object 
+      var data = new FormData(form);
 
-		  // If you want to add an extra field for the FormData
-        data.append("binaryString", binaryString);
+      // If you want to add an extra field for the FormData
+      data.append("binaryString", binaryString);
 
       $.ajax({
         type: 'POST',
