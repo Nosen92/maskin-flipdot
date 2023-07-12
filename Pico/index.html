@@ -13,13 +13,64 @@
     skylten.</p>
 
   <input type="file" id="upload" accept="image/*" />
-  <button onclick="convertImage()">Skicka till skylten</button>
+  <button onclick="checkFile()">Skicka till skylten</button>
 
   <script>
-    function convertImage() {
+    
+
+
+    function checkFile() {
       var fileInput = document.getElementById('upload');
+
+
+      var blob = fileInput.files[0]; // See step 1 above
+      var fileReader = new FileReader();
+      fileReader.onloadend = function(e) {
+        var arr = (new Uint8Array(e.target.result)).subarray(0, 4);
+        var header = "";
+        for(var i = 0; i < arr.length; i++) {
+          header += arr[i].toString(16);
+        }
+        
+        switch (header) {
+          case "89504e47":
+              //type = "image/png";
+              isImage = true;
+              break;
+          case "47494638":
+              //type = "image/gif";
+              isImage = false;
+              break;
+          case "ffd8ffe0":
+          case "ffd8ffe1":
+          case "ffd8ffe2":
+          case "ffd8ffe3":
+          case "ffd8ffe8":
+              //type = "image/jpeg";
+              isImage = true;
+              break;
+          default:
+              // type = "unknown"; // Or you can use the blob.type as fallback
+              isImage = false;
+              break;
+        }
+
+        if (isImage){
+          convertImage();
+        }
+        else{
+          alert('Felaktigt filformat! Måste vara en fil av typ .png, .jpeg eller .jpg.');
+        }
+      };
+      fileReader.readAsArrayBuffer(blob.slice(0,4));
+    }
+
+
+    function convertImage() {
+      
+      var fileInput = document.getElementById('upload');
+
       var file = fileInput.files[0];
-      var extension = fileInput.files[0].name.split('.').pop().toLowerCase();  //file extension from input file
       var reader = new FileReader();
 
       reader.onload = function (e) {
@@ -54,13 +105,6 @@
               binaryString += binaryValue;
             }
             binaryString += ";"
-          }
-
-          var fileTypes = ['jpg', 'jpeg', 'png'];  //acceptable file types
-          if (fileTypes.indexOf(extension) > -1) {
-            sendToServer(binaryString);
-          } else {
-            alert('Felaktigt filformat! Endast png och jpeg är tillåtet!');
           }
 
           if (canvas.width == 112 && canvas.height == 16) {
