@@ -113,7 +113,7 @@ Every packet ends with a footer, consisting of a checksum and the stop byte `0xf
 Then, the stop byte caps off the packet, letting the sign know that transmission of the packet is completed.
 
 ## Pixel Control with subcolumns
-To enable custom designs on the display, you can enter font code 0x77, which allows individual pixel control. This mode, or rather font, allows for any design on the display. It's not that elegantly implemented in the controller though. Instead of individual pixels or traditional letters, this font represents a 5-pixel high design, where each character is only 1 pixel wide. We call these **subcolumns**. Every possible combination of these 5 pixels is assigned a unique character code.
+To enable custom designs on the display, you can enter font code 0x77, which allows individual pixel control. This mode, or rather font, allows for any design on the display. It's not that elegantly implemented in the controller though. Instead of individual pixels or traditional letters, this font represents a 5-pixel high design, where each character is only 1 pixel wide. We call these **subcolumns**. Every possible combination of these 5 pixels is assigned a unique character code. Compare with [sixels](https://en.m.wikipedia.org/wiki/Sixel).
 
 This number is obtained like this: Assign 1 to the top pixel, 2 to the second one, 4 to the third, 8 to the 4th and 16 to the 5th. Add up the pixels that should be 'lit'. Then add 32. The sum is that character's code. By iterating over the display 5 rows at a time, the whole display can be drawn in any design.
 
