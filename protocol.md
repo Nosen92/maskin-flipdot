@@ -2,7 +2,7 @@
 
 > This document serves to explain the Mobitec protocol. It is not required reading to use the python code, since that handles all this for you.
 
-To control the flipdot display, commands are sent using Mobitec's sign protocol. This protocol consists of a sequence of bytes represented here with two hex values.
+To control the flipdot display, commands are sent using Mobitec's sign protocol. This protocol is really slow and robust, consists of a sequence of bytes represented here with two hex values: (e.g. 0xab).
 Here is an example that simply writes EXAMPLE at the top left of the display:
 ```
 0xff  # Starting byte      ⎫
@@ -13,9 +13,9 @@ Here is an example that simply writes EXAMPLE at the top left of the display:
 0xd1  # Display height     ⎟
 0x10  # 16px               ⎭
 0xd2  # Horizontal offset  ⎫
-0x00  # 0px                ⎟
+0x00  # 0px right          ⎟
 0xd3  # Vertical offset    ⎟
-0x0d  # 13px               ⎟
+0x0d  # 13px down          ⎟
 0xd4  # Font               ⎟
 0x73  # 13px font          ⎟
 0x45  # E                  ⎬ Data
@@ -53,7 +53,7 @@ The data contains information about what to draw and where. Every data section *
 0xd3  # Text cursor vertical offset label
 0x0d  # Vertical offset = 13, bottom left of character
 ```
-The sign features an offset capability that allows both rightward and downward shifting of the text. However, the vertical offset works in a weird way. The sign starts writing each character from its bottom-left corner. For example, applying a 13px vertical offset to a 5px font will create a 8px gap between the top of the 5px high character and the top of the display.
+The sign features an offset capability that allows both rightward and downward shifting of the text (the usual 4th quadrant screen coordinates). However, the vertical offset works in a weird way. The sign starts writing each character from its bottom-left corner. For example, applying a 13px vertical offset to a 5px font will create a 8px gap between the top of the 5px high character and the top of the display.
 
 Furthermore, it's important to note that the sign **disregards** any vertical offsets that would cause a character to exceed the top boundary of the display. This means that to move a 7px character 2px downwards, a 9px offset must be applied. If the offset is set to 2px, the text will appear at the top of the screen. On the other hand, the sign appropriately crops any text that exceeds the display boundaries downward or to the right, as expected.
 
@@ -90,7 +90,7 @@ The complete font list (yours might differ):
 ```
 The text is fairly basic ASCII codes. ASCII codes that are not recognized by the display are disregarded.
 
-Some ASCII characters are replaced by swedish diacritic characters.
+Some ASCII characters are replaced by swedish diacritic characters (Same as ["SvASCII"](https://www.wikiwand.com/en/articles/Code_page_1018)).
 | Char |  Byte  | ASCII |
 |:----:|:------:|:-----:|
 |   Å  | `0x5d` |   ]   |
@@ -100,7 +100,7 @@ Some ASCII characters are replaced by swedish diacritic characters.
 |   Ö  | `0x5c` |   \   |
 |   ö  | `0x7c` |   \|  |
 
-> One packet may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be repeated, even if they are identical to a previous section. If any one parameter is omitted, the sign **disregards** that section of data.
+> One packet may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be included, even if they are identical to a previous section (in that case they need to be repeated). If any one parameter is omitted, the sign **disregards** that section of data.
 
 ## Footer
 ```
@@ -113,7 +113,7 @@ Every packet ends with a footer, consisting of a checksum and the stop byte `0xf
 Then, the stop byte caps off the packet, letting the sign know that transmission of the packet is completed.
 
 ## Pixel Control with subcolumns
-To enable custom designs on the display, you can enter font code 0x77, which allows individual pixel control. This mode, or rather font, allows for any design on the display. It's not that elegantly implemented in the controller though. Instead of individual pixels or traditional letters, this font represents a 5-pixel high design, where each character is only 1 pixel wide. We call these **subcolumns**. Every possible combination of these 5 pixels is assigned a unique character code. Compare with [sixels](https://en.m.wikipedia.org/wiki/Sixel).
+To enable custom designs on the display, you can enter font code 0x77, which allows individual pixel control. This mode, or rather font, allows for any design on the display. It's not that elegantly implemented in the controller though. Instead of individual pixels or traditional letters, this font represents a 5-pixel high design, where each character is only 1 pixel wide. We call these **subcolumns**. Every possible combination of these 5 pixels is assigned a unique character code. Compare with [sixels](https://en.m.wikipedia.org/wiki/Sixel) (Maybe the 32 is added to be compatible with sixel char codes?).
 
 This number is obtained like this: Assign 1 to the top pixel, 2 to the second one, 4 to the third, 8 to the 4th and 16 to the 5th. Add up the pixels that should be 'lit'. Then add 32. The sum is that character's code. By iterating over the display 5 rows at a time, the whole display can be drawn in any design.
 
