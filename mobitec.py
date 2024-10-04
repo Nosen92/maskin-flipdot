@@ -86,7 +86,8 @@ class MobitecDisplay:
             "Ä": 0x5b,
             "ä": 0x7b,
             "Ö": 0x5c,
-            "ö": 0x7c
+            "ö": 0x7c,
+            "!": 0x21
         }
         for char in text.string:
             if char in special_char_mapping:
@@ -307,7 +308,7 @@ def draw_line(matrix, x1, y1, x2, y2):
 def png_to_bitmap(image_path):
     image = Image.open(image_path)
     image = image.convert("L")  # Greyscale
-    image = image.resize((28, 13))
+    image = image.resize((112, 16))
     width, height = image.size
     bm = Bitmap(width, height, 0, 0)  # Initialize bitmap
     for y in range(height):
@@ -326,8 +327,8 @@ if __name__ == "__main__":
     import math
     
     #port = "/dev/ttyS0" # RPi
-    port = "/dev/ttyUSB0" # Jonas
-    #port = "COM4" # Kasper
+    #port = "/dev/ttyUSB0" # Jonas
+    port = "COM7" # Kasper
     
     fonts = {
             # name, height, code
@@ -344,16 +345,22 @@ if __name__ == "__main__":
     flipdot = MobitecDisplay(port, fonts, address=0x06, width=112, height=16)
         
     flipdot.clear_display()
-    bm = Bitmap(28, 13, 2, 2)
-    bm.bitmap = designs.standard_m
+    # bm = Bitmap(28, 13, 2, 2)
+    # bm.bitmap = designs.standard_m
 
-    flipdot.set_position(3, 0)
-    flipdot.set_font("13px_wide")
-    flipdot.print_text("Smörjkammaren")
+    flipdot.set_position(0, 0)
+    flipdot.set_font("7px_wide")
+    flipdot.print_text("      Mechatronics")
+    flipdot.set_position(0, 8)
+    flipdot.print_text("          Lounge")
     flipdot.display()
     input()
-    # Add bitmap example too
+    # # Add bitmap example too
+    # flipdot.clear_display()
+    # flipdot.print_image(png_to_bitmap("mechatronics.png"))
+    # flipdot.display()
+
     
     
-    flipdot.dvd_screensaver(2)
+    #flipdot.dvd_screensaver(2)
 

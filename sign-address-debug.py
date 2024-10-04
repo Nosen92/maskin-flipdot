@@ -326,8 +326,8 @@ if __name__ == "__main__":
     import math
     
     #port = "/dev/ttyS0" # RPi
-    port = "/dev/ttyUSB0" # Jonas
-    #port = "COM4" # Kasper
+    #port = "/dev/ttyUSB0" # Jonas
+    port = "COM7" # Kasper
     
     fonts = {
             # name, height, code
@@ -352,7 +352,7 @@ if __name__ == "__main__":
         
         flipdot.set_position(0, 0)
         flipdot.set_font("7px")
-        flipdot.print_text(str(hex(address)))
+        flipdot.print_text(str(hex(address)) + " Kasper")
         flipdot.display()
         sleep(0.3)
         address += 1
