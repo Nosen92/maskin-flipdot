@@ -20,7 +20,7 @@ fonts = {
             "16px_numbers_wide": mobitec.Font("16px_numbers_wide", 16, 0x6a),
             "pixel_subcolumns": mobitec.Font("pixel_subcolumns", 5, 0x77)
     }
-flipdot = mobitec.MobitecDisplay(fonts, address=0x06, width=112, height=16)
+flipdot = mobitec.MobitecDisplay(fonts, address=0x06, width=28, height=16)
 
 def signUpload(binaryString):
     bm = mobitec.Bitmap(112, 16, 0, 0)  # Initialize bitmap

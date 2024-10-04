@@ -3,17 +3,18 @@
 <html>
 
 <head>
-  <title>Master Lounge Flip Dot</title>
+  <title>SmörjisSkylten</title>
   <script src="jquery.js"></script>
 </head>
 
 <body>
-  <p><b>Master Lounge Flip Dot Display</b></p>
-  <p>Choose an image with format .png or .jpg, it's dimensions should be 28 pixels wide and 13 pixels high.</p>
-  <p>To ensure best results the image should only contain white and black pixels, the black ones will turn green on the display.</p>
+  <p><b>Stora skylten</b></p>
+  <p>Välj en bild med format .png eller .jpg, den måste vara 28 pixlar bred och 13 pixlar hög.</p>
+  <p>För bästa resultat bör bilden endast innehålla svarta och vita pixlar, de svarta pixlarna kommer bli gröna på
+    skylten.</p>
 
   <input type="file" id="upload" accept="image/*" />
-  <button onclick="checkFile()">Send to display</button>
+  <button onclick="checkFile()">Skicka till skylten</button>
 
   <script>
     
@@ -59,7 +60,7 @@
           convertImage();
         }
         else{
-          alert('Incorrect file format! Image has to be of type .png, .jpeg or .jpg.');
+          alert('Felaktigt filformat! Måste vara en fil av typ .png, .jpeg eller .jpg.');
         }
       };
       fileReader.readAsArrayBuffer(blob.slice(0,4));
@@ -110,7 +111,7 @@
           if (canvas.width == 28 && canvas.height == 13) {
             sendToServer(binaryString);
           } else {
-            alert('Incorrect dimesions! The image must be 28 pixels in width wide and 13 pixels in hight!');
+            alert('Felaktig dimension! Bildfilen måste vara 28 pixlar bred och 13 pixlar hög!');
           }
         };
       };
@@ -150,5 +151,3 @@
 </body>
 
 </html>
-
-
