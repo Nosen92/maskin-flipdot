@@ -348,17 +348,15 @@ if __name__ == "__main__":
     # bm = Bitmap(28, 13, 2, 2)
     # bm.bitmap = designs.standard_m
 
-    flipdot.set_position(0, 0)
-    flipdot.set_font("7px_wide")
-    flipdot.print_text("      Mechatronics")
-    flipdot.set_position(0, 8)
-    flipdot.print_text("          Lounge")
+    # flipdot.set_position(0, 0)
+    # flipdot.set_font("7px_wide")
+    # flipdot.print_text("      Mechatronics")
+    # flipdot.set_position(0, 8)
+    # flipdot.print_text("          Lounge")
+        # # Add bitmap example too
+    flipdot.clear_display()
+    flipdot.print_image(png_to_bitmap("test3.png"))
     flipdot.display()
-    input()
-    # # Add bitmap example too
-    # flipdot.clear_display()
-    # flipdot.print_image(png_to_bitmap("mechatronics.png"))
-    # flipdot.display()
 
     
     
