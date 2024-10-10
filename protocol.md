@@ -41,7 +41,17 @@ Each packet can be divided into these parts: **header**, **data**, and **footer*
 0x10  # 16 pixels wide (0x10 = 16 in decimal)
 ```
 This part only needs to be sent once per packet. 
->TODO: See if resolution config is necessary in every packet.
+
+>TODO: See if resolution config is necessary in every packet. Investigate the purpose of `0xa2`.
+
+### Address
+```
+0x06  # Sign address, configurable on sign via coded rotary switch on sign PCB
+```
+The address byte in the packet header needs to match the hardware address of the sign.
+Why? Presumably, all destination signs in a bus share one control unit that's operated by the driver. Going forward in this text, whenever I write "bus" I'm referring to the data output pins of that sign control unit. If all signs are probably connected to the same data bus, what do we do if we want the name of the end-of-the-line stop on the front sign but only the line number on the back sign? Since the signs only recognize commands that have their address byte, all signs can share and receive all packets on the bus, and choose to ignore the ones that are not indended for them.
+
+The sign address can be read by inspecting the coded rotary switch on the sign's internal PCB (behind a small access panel). The sign's address can of course be changed by turning this switch. All values between `0x00` and `0x0f` are available, making the theoretical maximum of signs on the same bus 16. If you have more signs than that, please give some of them to me.
 
 ## Data
 The data contains information about what to draw and where. Every data section **is required** to include an offset and font data, or it will be disregarded by the sign.
