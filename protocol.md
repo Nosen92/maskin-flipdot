@@ -73,20 +73,26 @@ Furthermore, it's important to note that the sign **disregards** any vertical of
 0x73  # 13px text font
 ```
 This part instructs the display on which font to use for writing the text.
-> The lists of fonts available online (in other mobitec project repos) differ from one another, indicating that each display is programmed with a unique set of fonts. Only one font is consistent in all cases: The pixel control font `0x77`.
+> The lists of fonts available online (in other mobitec project repos) differ from one another, indicating that displays are programmed with different set of fonts. Only one font is consistent in all cases: The pixel control font `0x77`.
 
 The complete font list (yours might differ):
-```
-"7px": 0x60, # Seems to be fallback font, for unknown font codes
-"7px_wide": 0x62,
-12px": 0x63,
-"13px": 0x64,
-"13px_wide": 0x65,
-"13px_wider": 0x69,
-16px_numbers": 0x68,
-"16px_numbers_wide": 0x6a,
-"pixel_subcolums": 0x77
-```
+
+|  Code  |         Font         |
+|:------:|:--------------------:|
+| `0x60` |        `7 px`        |
+| `0x62` |     `7 px wide`      |
+| `0x63` |       `12 px`        |
+| `0x64` |       `13 px`        |
+| `0x65` |     `13 px wide`     |
+| `0x69` |    `13 px wider`     |
+| `0x68` |   `16 px numbers`    |
+| `0x6a` | `16 px numbers wide` |
+| `0x77` |   `Pixel control`    |
+
+The 7px font seems to be the fallback font when entering something not on this list.
+
+More info on pixel control in the 'Pixel Control with subcolumns' section.
+
 
 ### Text
 ```
@@ -117,8 +123,8 @@ Some ASCII characters are replaced by swedish diacritic characters (Same as ["Sv
 0xcd  # Checksum
 0xff  # Stop byte, always ff
 ```
-Every packet ends with a footer, consisting of a checksum and the stop byte `0xff`. The checksum is calculated by adding up all the previous characters in the packet, and taking the lower two bytes of that sum. This is done both on the sender side, and display side. If the two checksums do not match, the display **disregards** the whole packet.
->What happens when the checksum itself is `0xff`? That would conflict with the stop byte. To account for this special case, the checksum is altered to the **two** bytes `0xfe` and `0x01`. Strangely, the checksum is also altered in the case when it's `0xfe`, then it becomes `0xfe` followed by `0x00`.
+Every packet ends with a footer, consisting of a checksum and the stop byte `0xff`. The checksum is calculated by adding up all the previous characters in the packet (excluding the start byte `0xff`), and taking the least sifnificant byte of that sum. This is done both on the sender side, and display side. If the two checksums do not match, the display **disregards** the whole packet.
+>What happens when the checksum itself is `0xff`? That would conflict with the stop byte. To account for this special case, the checksum is altered to the **two** bytes `0xfe` and `0x01`. Curiously, the checksum is also altered in the case when it's `0xfe`, then it becomes `0xfe` followed by `0x00`.
 
 Then, the stop byte caps off the packet, letting the sign know that transmission of the packet is completed.
 
@@ -156,6 +162,6 @@ make up this smiley face:
 Designs taller than 5px are of course possible by dividing the design into 5px bands and then writing one data section for each band.
 
 ## Multiple data sections
-One packet may contain an arbitrary number of data sections. They may all have different offsets and fonts from one another. You can even have overlapping data sections. 
+One packet may contain an arbitrary number of data sections. They may all have different offsets and fonts from one another. You can even have data sections that write overlapping designs on the display. 
 > All pixels that are ordered to be lit by any data section, stay lit. In effect, the sign considers black to be transparent.
 
