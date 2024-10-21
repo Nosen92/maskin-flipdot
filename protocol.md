@@ -2,7 +2,13 @@
 
 > This document serves to explain the Mobitec protocol. It is not required reading to use the python code, since that handles all this for you.
 
-To control the flipdot display, commands are sent using Mobitec's sign protocol. This protocol is really slow and robust, consists of a sequence of bytes represented here with two hex values: (e.g. 0xab).
+To control the flipdot display, commands are sent using Mobitec's sign protocol.
+
+This protocol is really slow and robust. It uses the old serial communication standard [RS-485](https://en.wikipedia.org/wiki/RS-485). You can use a cheap MAX485 module to convert ordinary serial data to RS-485. The serial data is sent at 4800 Baud using the common 8N1 config (one start bit, eight data bits, no parity bit, and one stop bit).
+
+The sign only receives data and does not respond with any data (as far as I'm aware, I haven't really been listening).
+
+Every packet consists of a sequence of bytes represented here with two hex values: (e.g. 0xab).
 Here is an example that simply writes EXAMPLE at the top left of the display:
 ```
 0xff  # Starting byte      ⎫
@@ -52,6 +58,12 @@ The address byte in the packet header needs to match the hardware address of the
 Why? Presumably, all destination signs in a bus share one control unit that's operated by the driver. Going forward in this text, whenever I write "bus" I'm referring to the data output pins of that sign control unit. If all signs are probably connected to the same data bus, what do we do if we want the name of the end-of-the-line stop on the front sign but only the line number on the back sign? Since the signs only recognize commands that have their address byte, all signs can share and receive all packets on the bus, and choose to ignore the ones that are not indended for them.
 
 The sign address can be read by inspecting the coded rotary switch on the sign's internal PCB (behind a small access panel). The sign's address can of course be changed by turning this switch. All values between `0x00` and `0x0f` are available, making the theoretical maximum of signs on the same bus 16. If you have more signs than that, please give some of them to me.
+
+### Resolution
+
+For whatever reason, you can provide the sign with resolution data. I have not found the usecase for this and the sign will work without this data in every packet.
+
+> More research about the usefulness of the resolution part could be beneficial.
 
 ## Data
 The data contains information about what to draw and where. Every data section **is required** to include an offset and font data, or it will be disregarded by the sign.
