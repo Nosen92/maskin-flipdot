@@ -48,7 +48,7 @@ Each packet can be divided into these parts: **header**, **data**, and **footer*
 ```
 This part only needs to be sent once per packet. 
 
->TODO: See if resolution config is necessary in every packet. Investigate the purpose of `0xa2`.
+>TODO: Investigate the purpose of `0xa2`.
 
 ### Address
 ```
