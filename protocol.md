@@ -68,7 +68,7 @@ The sign address can be read by inspecting the coded rotary switch on the sign's
 0x10  # 16 pixels wide (0x10 = 16 in decimal)
 ```
 
-For whatever reason, you can provide the sign with resolution data. I have not found the usecase for this and the sign will work without this data in every packet. All displays I have seen have been either 112x16 or 20x13.
+For whatever reason, you can provide the sign with resolution data. I have not found the usecase for this and the sign will work without this data in every packet. All displays I have seen have been either 112x16 or 28x13.
 
 > More research about the usefulness of the resolution part could be beneficial.
 
