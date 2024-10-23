@@ -45,7 +45,10 @@ void setup() {
 
   Serial.write(0xff);
   Serial.write(packet, length);
-  Serial.write(calculateChecksum(packet, length));
+  byte checksum = calculateChecksum(packet, length);
+  if (checksum == 0xff) { Serial.write(0xfe); Serial.write(0x01); }
+  else if (checksum == 0xfe) { Serial.write(0xfe); Serial.write(0x00); }
+  else { Serial.write(checksum); }  
   Serial.write(0xff);
 
 
