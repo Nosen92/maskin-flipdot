@@ -4,7 +4,7 @@
 
 To control the flipdot display, commands are sent using Mobitec's sign protocol.
 
-This protocol is really slow and robust. It uses the old serial communication standard [RS-485](https://en.wikipedia.org/wiki/RS-485). You can use a cheap MAX485 module to convert ordinary RS-232 serial UART data to RS-485. The serial data is sent at 4800 Baud using the common 8N1 config (one start bit, eight data bits, no parity bit, and one stop bit).
+This protocol is really slow and robust. It uses the old serial communication standard [RS-485](https://en.wikipedia.org/wiki/RS-485). You can use a cheap MAX485 module to convert ordinary serial UART data to RS-485. The serial data is sent at 4800 Baud using the common 8N1 config (one start bit, eight data bits, no parity bit, and one stop bit).
 
 The sign only receives data and does not respond with any data (as far as I'm aware, I haven't really been listening).
 
