@@ -1,15 +1,15 @@
 # Mobitec Sign Protocol
 
-> This document serves to explain the Mobitec protocol. It is not required reading to use the python code, since that handles all this for you.
+> [!NOTE] 
+> This document serves to explain the Mobitec protocol. It is not required reading to use the python or arduino code, since that handles all this for you.
 
-To control the flipdot display, commands are sent using Mobitec's sign protocol.
+To control the flipdot display, commands are sent as a sequence of bytes using Mobitec's sign protocol. This protocol is really robust, but very slow. Display refresh rate is 1-2 fps.
 
-This protocol is really slow and robust. It uses the old serial communication standard [RS-485](https://en.wikipedia.org/wiki/RS-485). You can use a cheap MAX485 module to convert ordinary serial UART data to RS-485. The serial data is sent at 4800 Baud using the common 8N1 config (one start bit, eight data bits, no parity bit, and one stop bit).
+The byte sequence is sent to the sign via serial communication at 4800 Baud using the common 8N1 config (one start bit, eight data bits, no parity bit, and one stop bit) using the old serial communication standard [RS-485](https://en.wikipedia.org/wiki/RS-485). You can use a cheap MAX485 module to convert ordinary serial UART data to RS-485 in order to communicate with the sign.
 
 The sign only receives data and does not respond with any data (as far as I'm aware, I haven't really been listening).
 
-Every packet consists of a sequence of bytes represented here with two hex values: (e.g. 0xab).
-Here is an example that simply writes EXAMPLE at the top left of the display:
+I call byte sequences packets in this documentation. Here is a packet that simply writes EXAMPLE on the top left of the display:
 ```
 0xff  # Starting byte      ⎫
 0x06  # Sign address       ⎟
@@ -48,7 +48,7 @@ Each packet can be divided into these parts: **header**, **data**, and **footer*
 ```
 This part only needs to be sent once per packet. 
 
->TODO: Investigate the purpose of `0xa2`.
+> TODO: Investigate the purpose of `0xa2`.
 
 ### Address
 ```
@@ -92,6 +92,8 @@ Furthermore, it's important to note that the sign **disregards** any vertical of
 0x73  # 13px text font
 ```
 This part instructs the display on which font to use for writing the text.
+
+>[!NOTE]
 > The lists of fonts available online (in other mobitec project repos) differ from one another, indicating that displays are programmed with different set of fonts. Only one font is consistent in all cases: The pixel control font `0x77`.
 
 The complete font list (yours might differ):
@@ -135,7 +137,9 @@ Some ASCII characters are replaced by swedish diacritic characters (Same as ["Sv
 |   Ö  | `0x5c` |   \   |
 |   ö  | `0x7c` |   \|  |
 
-> One packet may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be included, even if they are identical to a previous section (in that case they need to be repeated). If any one parameter is omitted, the sign **disregards** that section of data.
+
+>[!IMPORTANT]
+> One packet may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be included, even if they are identical to a previous section (in that case they need to be repeated). If any one parameter is omitted, the sign **disregards** that section of data!
 
 ## Footer
 ```
@@ -182,5 +186,7 @@ Designs taller than 5px are of course possible by dividing the design into 5px b
 
 ## Multiple data sections
 One packet may contain an arbitrary number of data sections. They may all have different offsets and fonts from one another. You can even have data sections that write overlapping designs on the display. 
+
+> [!NOTE]
 > All pixels that are ordered to be lit by any data section, stay lit. In effect, the sign considers black to be transparent.
 
