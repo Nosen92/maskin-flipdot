@@ -31,7 +31,7 @@ I call byte sequences packets in this documentation. Here is a packet that simpl
 0x50  # P                  ⎟
 0x4c  # L                  ⎟
 0x45  # E                  ⎭
-0xcd  # Checksum           ⎫ Footer
+0xce  # Checksum           ⎫ Footer
 0xff  # Stop byte          ⎭
 ```
 Each packet can be divided into these parts: **header**, **data**, and **footer**. Let's break it down.
