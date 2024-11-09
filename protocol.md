@@ -141,12 +141,12 @@ Some ASCII characters are replaced by swedish diacritic characters (Same as ["Sv
 >[!IMPORTANT]
 > One packet may contain many different data sections, one after the other. But for every data section, **all** parameters (offsets and font) need to be included, even if they are identical to a previous section (in that case they need to be repeated). If any one parameter is omitted, the sign **disregards** that section of data!
 
-## Footer
+## Footer and checksum
 ```
-0xcd  # Checksum
+0xcd  # Modulo 256 Checksum
 0xff  # Stop byte, always ff
 ```
-Every packet ends with a footer, consisting of a checksum and the stop byte `0xff`. The checksum is calculated by adding up all the previous characters in the packet (excluding the start byte `0xff`), and taking the least sifnificant byte of that sum. This is done both on the sender side, and display side. If the two checksums do not match, the display **disregards** the whole packet.
+Every packet ends with a footer, consisting of a modulo 256 checksum and the stop byte `0xff`. The checksum is calculated by adding up all the previous characters in the packet (excluding the start byte `0xff`), then performing a modulo 256 operation, which in effect gets rid of every byte of that sum except the least significant byte. The remaining byte is the checksum. This is done both on the sender side, and display side. If the two checksums do not match, the display **disregards** the whole packet.
 >What happens when the checksum itself is `0xff`? That would conflict with the stop byte. To account for this special case, the checksum is altered to the **two** bytes `0xfe` and `0x01`. Curiously, the checksum is also altered in the case when it's `0xfe`, then it becomes `0xfe` followed by `0x00`.
 
 Then, the stop byte caps off the packet, letting the sign know that transmission of the packet is completed.
