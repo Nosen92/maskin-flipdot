@@ -8,7 +8,7 @@ Collection of python libraries, arduinno sketches and documentation about drivin
 
 ## Hardware
 
-This library is tested with a MAX485 module for converting the TTL serial signals to RS-485.
+This library is tested with a MAX485 module for converting the TTL serial signals to RS-485. Serial communication has been tested and confirmed working using: Raspberry Pi (see hookup diagram below), USB-to-TTL dongles with CP2102 chipsets, and Wemos D1 mini with CH340 chipsets.
 
 <p align="center">
   <img src="schematic.png" width="33%" height="33%">
