@@ -1,6 +1,10 @@
 # maskin-flipdot
 
-Python library for driving mobitec flipdot displays using serial communication.
+<p align="center">
+  <img src="1009.jpg" width="67%" height="67%">
+</p>
+
+Collection of python libraries, arduinno sketches and documentation about driving mobitec flipdot displays using serial communication.
 
 ## Hardware
 
