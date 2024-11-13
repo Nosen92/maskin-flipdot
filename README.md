@@ -4,7 +4,7 @@
   <img src="1009.jpg" width="67%" height="67%">
 </p>
 
-Collection of python libraries, arduinno sketches and documentation about driving mobitec flipdot displays using serial communication.
+Collection of python libraries, arduino sketches and documentation about driving mobitec flipdot displays using serial communication.
 
 ## Hardware
 
@@ -66,4 +66,4 @@ This project is licensed under the MIT License. See the `LICENSE` file for more 
 
 ## Further reading
 
-The controller board inside the sign is documented in prefixFelix's [controller.md](https://github.com/prefixFelix/mobitec-flipdot/blob/main/docs/controllers.md).
+The controller board inside the sign is documented in prefixFelix's [controllers.md](https://github.com/prefixFelix/mobitec-flipdot/blob/main/docs/controllers.md).
