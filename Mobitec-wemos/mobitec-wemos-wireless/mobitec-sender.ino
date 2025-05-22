@@ -24,7 +24,7 @@ const uint64_t pipe = 0xE8E8F0F0E1LL;
 // Payload to send
 byte packet[] = {
   0xff,
-  0x0b,
+  0x06,
   0xa2,
   0xd0,  // Resolution
   0x70,
@@ -47,7 +47,7 @@ byte packet[] = {
   0X52,  // R
   0X4C,  // L
   0X44,  // D
-  0x00,  // Checksum placeholder, will be calculated in setup()
+  0xe0,  // Checksum placeholder, will be calculated in setup()
   0xff   // Stop byte
 };
 

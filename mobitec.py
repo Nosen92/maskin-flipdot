@@ -138,10 +138,30 @@ class MobitecDisplay:
         return header
         
     def display(self):
-        """Sends contents of the buffer to the display."""
+        """Sends contents of the buffer to the display and prints sender output."""
+        import time
+
         packet = self._create_packet()
-        with serial.Serial(self.port, 4800, timeout=1) as ser:
-            ser.write(packet)
+        length = len(packet)
+        print("packet length: " + str(length))
+
+        with serial.Serial(self.port, 9600, timeout=1) as ser:
+            # Flush input buffer to avoid reading stale messages
+            ser.reset_input_buffer()
+
+            # Send header + data
+            ser.write(packet + b'\n')
+
+            # Give the sender time to process
+            time.sleep(0.2)
+            
+            # Read and print all available output from sender
+            while ser.in_waiting > 0:
+                
+                line = ser.readline().decode(errors='replace').strip()
+                if line:
+                    print("Sender:", line)
+
             
     def clear_display(self):
         """Clears the display buffer."""
@@ -325,10 +345,11 @@ if __name__ == "__main__":
     from PIL import Image
     import datetime
     import math
+    import time
     
     #port = "/dev/ttyS0" # RPi
     #port = "/dev/ttyUSB0" # Jonas
-    port = "COM7" # Kasper
+    port = "COM5" # Kasper
     
     fonts = {
             # name, height, code
@@ -352,12 +373,17 @@ if __name__ == "__main__":
     # flipdot.set_font("7px_wide")
     # flipdot.print_text("      Mechatronics")
     # flipdot.set_position(0, 8)
-    # flipdot.print_text("          Lounge")
+    # flipdot.print_text("          Loungi12346")
         # # Add bitmap example too
+    #flipdot.clear_display()
+    flipdot.print_image(png_to_bitmap("test2.png"))
+    flipdot.display()
+    time.sleep(10)
+    
     flipdot.clear_display()
+    
     flipdot.print_image(png_to_bitmap("test3.png"))
     flipdot.display()
-
     
     
     #flipdot.dvd_screensaver(2)

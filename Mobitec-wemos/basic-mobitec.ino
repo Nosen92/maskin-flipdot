@@ -1,3 +1,4 @@
+#include <Arduino.h>
 // Tested with wemos d1 mini
 // Connected wemos tx to max485 di
 
