@@ -66,4 +66,4 @@ This project is licensed under the MIT License. See the `LICENSE` file for more 
 
 ## Further reading
 
-The controller board inside the sign is documented in prefixFelix's [controller.md](https://github.com/prefixFelix/mobitec-flipdot/blob/main/docs/controllers.md).
+The controller board inside the sign is documented in prefixFelix's [controller.md](https://github.com/prefixFelix/mobitec-flipdot/blob/main/docs/controller.md).
