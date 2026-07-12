@@ -3,7 +3,7 @@
 > [!NOTE] 
 > This document serves to explain the Mobitec protocol. It is not required reading to use the python or arduino code, since that handles all this for you.
 
-To control the flipdot display, commands are sent as a sequence of bytes using Mobitec's sign protocol. This protocol is really robust, but very slow. Display refresh rate is 1-2 fps.
+To control the flipdot display, commands are sent as a sequence of bytes using Mobitec's sign protocol. This protocol is really robust, but very slow. Due to this, the display's maximum refresh rate is about 1-2 fps.
 
 The byte sequence is sent to the sign via serial communication at 4800 Baud using the common 8N1 config (one start bit, eight data bits, no parity bit, and one stop bit) using the old serial communication standard [RS-485](https://en.wikipedia.org/wiki/RS-485). You can use a cheap MAX485 module to convert ordinary serial UART data to RS-485 in order to communicate with the sign.
 
@@ -127,7 +127,7 @@ More info on pixel control in the 'Pixel Control with subcolumns' section.
 ```
 The text is fairly basic ASCII codes. ASCII codes that are not recognized by the display are disregarded.
 
-Some ASCII characters are replaced by swedish diacritic characters (Same as ["SvASCII"](https://www.wikiwand.com/en/articles/Code_page_1018)).
+Some ASCII characters are replaced by swedish diacritic characters (Same as ["SvASCII"](https://en.wikipedia.org/wiki/Code_page_1018).
 | Char |  Byte  | ASCII |
 |:----:|:------:|:-----:|
 |   Å  | `0x5d` |   ]   |
